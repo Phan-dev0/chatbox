@@ -29,7 +29,7 @@ export const AuthContextProvider = ({ children }) => {
 
 
   useEffect(() => {
-    const userData = localStorage.getItem("user");
+    const userData = localStorage.getItem("User");
     setUser(JSON.parse(userData));
   }, []);
 
@@ -69,7 +69,7 @@ export const AuthContextProvider = ({ children }) => {
   );
 
 
-  const logoutUser = useCallback(async (e) => {
+  const logoutUser = useCallback((e) => {
     localStorage.removeItem("User");
     setUser(null);
   }, []);

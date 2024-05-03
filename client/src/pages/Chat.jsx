@@ -8,7 +8,7 @@ import ChatBox from "../components/ChatBox";
 
 const Chat = () => {
   const { user } = useContext(AuthContext);
-  const { userChats, isUserChatsLoading, udpateCurrentChat } =
+  const { userChats, isUserChatsLoading, updateCurrentChat } =
     useContext(ChatContext);
 
   //   console.log("user chats: ", userChats);
@@ -22,7 +22,7 @@ const Chat = () => {
             {isUserChatsLoading && <p>Loading chats...</p>}
             {userChats?.map((chat, index) => {
               return (
-                <div key={index} onClick={() => udpateCurrentChat(chat)}>
+                <div key={index} onClick={() => updateCurrentChat(chat)}>
                   <UserChat chat={chat} user={user} />
                 </div>
               );

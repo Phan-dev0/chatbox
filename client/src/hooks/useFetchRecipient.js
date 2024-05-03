@@ -5,9 +5,9 @@ export const useFetchRecipientUser = (chat, user) => {
   const [recipientUser, setRecipientUser] = useState(null);
   const [error, setError] = useState(null);
 
-  const recipientId = chat?.members.find((id) => id !== user?._id);
+  const recipientId = chat?.members?.find((id) => id !== user?._id);
 
-//   console.log("recipientId: ", recipientId);
+  // console.log("recipientId: ", recipientId);
 //   console.log("recipientUser: ", recipientUser);
 //   console.log("chat: ", chat);
 
@@ -28,5 +28,5 @@ export const useFetchRecipientUser = (chat, user) => {
     getUser();
   }, [recipientId]);
 
-  return { recipientUser, error };
+  return { recipientUser };
 };

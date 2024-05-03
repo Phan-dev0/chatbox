@@ -10,7 +10,7 @@ const UserChat = ({ chat, user }) => {
 
   // console.log("recipient: ", recipientUser);
 
-  const isOnline = onlineUsers?.some((user) => user?.userId === recipientUser?._id) ? "user-online" : "";
+  const isOnline = onlineUsers?.some((user) => user?.userId === recipientUser?._id);
 
   return (
     <Stack

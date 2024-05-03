@@ -1,4 +1,4 @@
-import { createContext, useCallback, useEffect, useState } from "react";
+import { createContext, useCallback, useEffect, useRef, useState } from "react";
 import { baseUrl, postRequest, getRequest } from "../utils/service";
 import { io } from "socket.io-client";
 
@@ -20,10 +20,15 @@ export const ChatContextProvider = ({ children, user }) => {
   const [socket, setSocket] = useState(null);
   const [onlineUsers, setOnlineUsers] = useState([]);
 
+  const [notifications, setNotifications] = useState([]);
+
+
   //   console.log("currentChat: ", currentChat);
   //   console.log("messages: ", messages);
+    console.log("notifications: ", notifications);
 
-  console.log("onlineUsers: ", onlineUsers);
+
+  // console.log("onlineUsers: ", onlineUsers);
 
   // initial socket
   useEffect(() => {
@@ -52,25 +57,38 @@ export const ChatContextProvider = ({ children, user }) => {
   // send message
   useEffect(() => {
     if (socket === null) return;
+
     const recipientId = currentChat?.members?.find((id) => id !== user?._id);
 
     socket.emit("sendMessage", { ...newMessage, recipientId });
-  }, [socket]);
+  }, [newMessage]);
 
-  // receive message
+  // receive message and notification
   useEffect(() => {
     if (socket === null) return;
-    
+
     socket.on("getMessage", res => {
-      if(currentChat?._id !== res.chatId) return;
+      if (currentChat?._id !== res.chatId) return;
 
       setMessages((prev) => [...prev, res]);
     });
 
+    socket.on("getNotification", (res) => {
+      const isChatOpen = currentChat?.members.some((id) => id === res.senderId);
+
+      if (isChatOpen) {
+        setNotifications((prev) => [{ ...res, isRead: true }, ...prev])
+      } else {
+        setNotifications((prev)  => [res, ...prev]);
+      }
+
+    })
+
     return () => {
       socket.off("getMessage");
-    }
-  }, [socket]);
+      socket.off("getNotification");
+    };
+  }, [socket, currentChat]);
 
 
 
@@ -152,7 +170,7 @@ export const ChatContextProvider = ({ children, user }) => {
     getUserChats();
   }, [user]);
 
-  const udpateCurrentChat = useCallback((chat) => {
+  const updateCurrentChat = useCallback((chat) => {
     setCurrentchat(chat);
   }, []);
 
@@ -193,7 +211,7 @@ export const ChatContextProvider = ({ children, user }) => {
 
       setMessages((prev) => [...prev, response]);
 
-      setTextMessage("");
+      setTextMessage(" ");
     },
     []
   );
@@ -207,13 +225,14 @@ export const ChatContextProvider = ({ children, user }) => {
         potentialChats,
         createChat,
         currentChat,
-        udpateCurrentChat,
+        updateCurrentChat,
         messages,
         isMessagesLoading,
         messagesError,
         sendTextMessage,
         sendTextMessageError,
         onlineUsers,
+        notifications,
       }}
     >
       {children}
