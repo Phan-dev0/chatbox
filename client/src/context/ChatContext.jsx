@@ -22,10 +22,12 @@ export const ChatContextProvider = ({ children, user }) => {
 
   const [notifications, setNotifications] = useState([]);
 
+  const [allUsers, setAllUsers] = useState([]);
+
 
   //   console.log("currentChat: ", currentChat);
   //   console.log("messages: ", messages);
-    console.log("notifications: ", notifications);
+  // console.log("notifications: ", notifications);
 
 
   // console.log("onlineUsers: ", onlineUsers);
@@ -79,7 +81,7 @@ export const ChatContextProvider = ({ children, user }) => {
       if (isChatOpen) {
         setNotifications((prev) => [{ ...res, isRead: true }, ...prev])
       } else {
-        setNotifications((prev)  => [res, ...prev]);
+        setNotifications((prev) => [res, ...prev]);
       }
 
     })
@@ -89,7 +91,6 @@ export const ChatContextProvider = ({ children, user }) => {
       socket.off("getNotification");
     };
   }, [socket, currentChat]);
-
 
 
 
@@ -120,6 +121,7 @@ export const ChatContextProvider = ({ children, user }) => {
       //   console.log("pchats: ", pChats);
 
       setPotentialChats(pChats);
+      setAllUsers(response)
     };
     getUsers();
   }, [userChats, user]);
@@ -168,12 +170,14 @@ export const ChatContextProvider = ({ children, user }) => {
     };
 
     getUserChats();
-  }, [user]);
+  }, [user, notifications]);
 
+  // Update current chat
   const updateCurrentChat = useCallback((chat) => {
     setCurrentchat(chat);
   }, []);
 
+  // Create Chat
   const createChat = useCallback(async (firstId, secondId) => {
     const response = await postRequest(
       `${baseUrl}/chats`,
@@ -188,6 +192,7 @@ export const ChatContextProvider = ({ children, user }) => {
     setUserChats((prev) => [...prev, response]);
   }, []);
 
+  // send text
   const sendTextMessage = useCallback(
     async (textMessage, sender, currentChatId, setTextMessage) => {
       if (!textMessage) {
@@ -215,6 +220,59 @@ export const ChatContextProvider = ({ children, user }) => {
     },
     []
   );
+  
+  // mark all notification
+  const markAllNotificationsAsRead = useCallback((notifications) => {
+    const markNotifications = notifications.map((n) => { return { ...n, isRead: true } });
+
+    setNotifications(markNotifications);
+  }, []);
+
+
+  // mark notification
+  const markNotificationAsRead = useCallback((n, userChats, user, notifications) => {
+    // find chat to open
+    const desiredChat = userChats.find((chat) => {
+      const chatMembers = [user._id, n.senderId];
+      const isDesiredChat = chat?.members.every((member) => {
+        return chatMembers.includes(member);
+      });
+
+      return isDesiredChat;
+    })
+
+    // mark notifcation as read
+    const mNotifications = notifications.map((el) => {
+      if(el.secondId === n.secondId){
+        return {...n, isRead: true};
+      }else{
+        return el;
+      }
+    });
+
+    updateCurrentChat(desiredChat);
+    setNotifications(mNotifications);
+  },[]);
+
+  
+  const markThisUserNotificationsAsRead = useCallback((thisUserNotification, notifications) => {
+    // mark notifications read
+
+    const mNotifications = notifications.map((el) => {
+      let notification;
+
+      thisUserNotification.forEach((n) => {
+        if(n.senderId === el.senderId){
+          notification = {...n, isRead: true};
+        }else{
+          notification = el;
+        }
+      });
+
+      return notification;
+    });
+    setNotifications(mNotifications);
+  });
 
   return (
     <ChatContext.Provider
@@ -233,6 +291,10 @@ export const ChatContextProvider = ({ children, user }) => {
         sendTextMessageError,
         onlineUsers,
         notifications,
+        allUsers,
+        markAllNotificationsAsRead,
+        markNotificationAsRead,
+        markThisUserNotificationsAsRead,
       }}
     >
       {children}
